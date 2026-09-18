@@ -70,3 +70,37 @@ export interface DroppableData {
   periodIndex: number;
   slotIndex: number;
 }
+
+// --- Multi-tenant types ---
+
+export interface UserProfile {
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+  photoURL: string | null;
+  createdAt?: any;
+}
+
+export interface Team {
+  id: string;
+  name: string;
+  ownerId: string;
+  memberIds: string[];
+  createdAt?: any;
+  updatedAt?: any;
+}
+
+// Persisted at /teams/{teamId}/roster/current
+export interface RosterDoc {
+  roster: Player[];
+  assignSettings: AssignSettings;
+  updatedAt?: any;
+}
+
+export interface FavoriteItem {
+  id: string;
+  name: string;
+  gridState: RotationState;
+  createdAt?: any;
+  createdBy?: string;
+}
