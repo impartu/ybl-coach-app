@@ -1483,7 +1483,7 @@ export function RotationManagerScreen() {
                 title="Fill remaining slots based on Period 1"
               >
                 <Wand2 className="w-4 h-4 shrink-0" />
-                <span className="whitespace-nowrap">Auto Assign</span>
+                <span className="whitespace-nowrap">Auto<span className="hidden sm:inline"> Assign</span></span>
               </button>
 
               {/* Strategy Settings Button (Gear Icon) */}
