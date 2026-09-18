@@ -1,0 +1,6 @@
+{
+  "name": "YBL Manager",
+  "description": "A drag-and-drop basketball rotation management tool for Coach Dave to manage player substitutions and playing time.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
