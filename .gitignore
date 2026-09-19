@@ -33,4 +33,5 @@ lerna-debug.log*
 *.sw?
 .DS_Store
 .vercel
+.firebase
 .env*
