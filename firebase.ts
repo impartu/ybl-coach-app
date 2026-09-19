@@ -4,7 +4,7 @@ import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: "AIzaSyBRpjFghg9CQx5BEdciCwRtD2PXJR8W-WU",
-  authDomain: "coachybl.com",
+  authDomain: "ybl-coach-app.firebaseapp.com",
   projectId: "ybl-coach-app",
   storageBucket: "ybl-coach-app.firebasestorage.app",
   messagingSenderId: "400781229040",
