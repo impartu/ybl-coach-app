@@ -1195,7 +1195,11 @@ export function RotationManagerScreen() {
       printWindow = window.open('', '_blank');
     }
 
+    const element = document.getElementById('app-capture');
+
     try {
+      if (!element) return;
+
       if (asBW) {
         setIsBlackAndWhite(true);
         // Allow DOM to re-render in high-contrast black & white
@@ -1208,17 +1212,17 @@ export function RotationManagerScreen() {
         await new Promise(resolve => setTimeout(resolve, 100));
       }
 
-      const element = document.getElementById('app-capture');
-      if (!element) return;
-
       // html2canvas estimates its own text line-height rather than using the
-      // browser's, and if the custom "Inter" web font hasn't fully registered
-      // as loaded yet, it under-estimates that height and clips the tops of
-      // glyphs across the whole capture. Forcing a wait on the font-loading
-      // API before capturing avoids that race.
+      // browser's, and reliably underestimates it for the "Inter" web font,
+      // clipping the tops of glyphs across the whole capture. Forcing extra
+      // line-height room on the real DOM before capturing (so the browser
+      // itself lays out taller, already-correct boxes) gives html2canvas's
+      // undershoot somewhere safe to land instead of clipping.
+      element.classList.add('export-capture-safe-lineheight');
       if (document.fonts && document.fonts.ready) {
         await document.fonts.ready;
       }
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       const canvas = await html2canvas(element as HTMLElement, {
         scale: 2, // Higher quality
@@ -1248,6 +1252,7 @@ export function RotationManagerScreen() {
       alert('Failed to export image. Please try again.');
       printWindow?.close();
     } finally {
+      element?.classList.remove('export-capture-safe-lineheight');
       if (asBW) {
         // Automatically revert back to color mode
         setIsBlackAndWhite(false);

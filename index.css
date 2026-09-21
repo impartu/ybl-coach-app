@@ -15,6 +15,16 @@
   -webkit-user-select: none;
 }
 
+/* html2canvas underestimates the line-height of the "Inter" web font when
+   rasterizing text, clipping the tops of glyphs. Applied only to #app-capture
+   for the brief moment a save/print image is being generated, this forces
+   extra vertical room in every text box so html2canvas's undershoot lands
+   inside the (now generously sized) box instead of clipping it. */
+.export-capture-safe-lineheight,
+.export-capture-safe-lineheight * {
+  line-height: 1.7 !important;
+}
+
 @media print {
   [data-html2canvas-ignore] {
     display: none !important;
