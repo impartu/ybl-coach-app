@@ -1211,6 +1211,15 @@ export function RotationManagerScreen() {
       const element = document.getElementById('app-capture');
       if (!element) return;
 
+      // html2canvas estimates its own text line-height rather than using the
+      // browser's, and if the custom "Inter" web font hasn't fully registered
+      // as loaded yet, it under-estimates that height and clips the tops of
+      // glyphs across the whole capture. Forcing a wait on the font-loading
+      // API before capturing avoids that race.
+      if (document.fonts && document.fonts.ready) {
+        await document.fonts.ready;
+      }
+
       const canvas = await html2canvas(element as HTMLElement, {
         scale: 2, // Higher quality
         useCORS: true,
