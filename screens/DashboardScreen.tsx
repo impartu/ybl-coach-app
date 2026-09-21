@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Trash2, LogOut, Users } from 'lucide-react';
+import { Plus, Trash2, LogOut } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { createTeam, listMyTeams, deleteTeam } from '../services/teamService';
 import { Team } from '../types';
@@ -76,7 +76,7 @@ export function DashboardScreen() {
         <div className="max-w-3xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="p-2 rounded-lg bg-brand-500 text-white shadow-brand-200 shadow-md">
-              <Users className="w-5 h-5" />
+              <img src="/icon.svg" alt="" className="w-5 h-5" />
             </div>
             <h1 className="font-bold text-slate-800 hidden sm:block">Coach YBL App</h1>
           </div>

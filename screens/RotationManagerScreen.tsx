@@ -11,7 +11,7 @@ import {
   DragEndEvent,
   DragOverEvent,
 } from '@dnd-kit/core';
-import { CalendarClock, RotateCcw, Download, AlertCircle, Wand2, HelpCircle, Printer, Save, Bookmark, BookmarkPlus, Trash2, FileJson, ChevronDown, ChevronUp, Settings, ArrowLeft, LogOut } from 'lucide-react';
+import { RotateCcw, Download, AlertCircle, Wand2, HelpCircle, Printer, Save, Bookmark, BookmarkPlus, Trash2, FileJson, ChevronDown, ChevronUp, Settings, ArrowLeft, LogOut } from 'lucide-react';
 // @ts-ignore
 import html2canvas from 'html2canvas';
 import { useAuth } from '../hooks/useAuth';
@@ -1454,7 +1454,7 @@ export function RotationManagerScreen() {
                 "p-1.5 sm:p-2 rounded-lg text-white transition-all shrink-0 group-hover:scale-105",
                 isBlackAndWhite ? "bg-slate-900" : "bg-brand-500 shadow-brand-200 shadow-md"
               )}>
-                <CalendarClock className="w-5 h-5 sm:w-6 sm:h-6" />
+                <img src="/icon.svg" alt="" className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
               <div className="min-w-0 flex flex-col justify-center">
                 <div className="flex items-center gap-1">

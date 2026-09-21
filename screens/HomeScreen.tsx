@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { CalendarClock, Wand2, Users, TrendingUp, Bookmark, ArrowRight } from 'lucide-react';
+import { Wand2, Users, TrendingUp, Bookmark, ArrowRight } from 'lucide-react';
 
 const FEATURES = [
   {
@@ -37,7 +37,7 @@ export function HomeScreen() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="p-1.5 rounded-lg bg-brand-500 text-white shadow-brand-200 shadow-md">
-              <CalendarClock className="w-5 h-5" />
+              <img src="/icon.svg" alt="" className="w-5 h-5" />
             </div>
             <span className="font-bold text-slate-800 hidden sm:inline">Coach YBL App</span>
           </div>
