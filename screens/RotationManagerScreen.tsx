@@ -11,7 +11,7 @@ import {
   DragEndEvent,
   DragOverEvent,
 } from '@dnd-kit/core';
-import { RotateCcw, Download, AlertCircle, Wand2, HelpCircle, Printer, Save, Bookmark, BookmarkPlus, Trash2, FileJson, ChevronDown, ChevronUp, Settings, ArrowLeft, LogOut } from 'lucide-react';
+import { RotateCcw, AlertCircle, Wand2, HelpCircle, Save, Bookmark, BookmarkPlus, Trash2, FileJson, ChevronDown, Settings, ArrowLeft, LogOut, MoreHorizontal, Image as ImageIcon, BarChart3 } from 'lucide-react';
 // @ts-ignore
 import html2canvas from 'html2canvas';
 import { useAuth } from '../hooks/useAuth';
@@ -61,6 +61,7 @@ export function RotationManagerScreen() {
   const [seasonTotals, setSeasonTotals] = useState<Record<string, number>>({});
   const [seasonStats, setSeasonStats] = useState<Record<string, PlayerSeasonStats>>({});
   const [isExpandedView, setIsExpandedView] = useState(false);
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
 
   // Favorites State
   const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
@@ -1166,6 +1167,10 @@ export function RotationManagerScreen() {
   };
 
   const handleReset = () => {
+    if (!window.confirm('Reset rotation? This clears the grid and marks everyone available again.')) {
+      return;
+    }
+
     // 1. Clear Data State
     setRotation({});
     setRoster(prev => prev.map(p => ({ ...p, isAvailable: true })));
@@ -1178,9 +1183,18 @@ export function RotationManagerScreen() {
     setResetKey(prev => prev + 1);
   };
 
-  const handleExport = async (asBW: boolean = false) => {
+  const handleExportImage = async (asBW: boolean, mode: 'save' | 'print') => {
     const previousBW = isBlackAndWhite;
     setIsExporting(true);
+
+    // Open the print window synchronously, before any await, so browsers don't
+    // treat it as a blocked popup (the user-gesture context is lost after an
+    // async yield). We fill in its content once the canvas is ready.
+    let printWindow: Window | null = null;
+    if (mode === 'print') {
+      printWindow = window.open('', '_blank');
+    }
+
     try {
       if (asBW) {
         setIsBlackAndWhite(true);
@@ -1206,14 +1220,24 @@ export function RotationManagerScreen() {
         windowHeight: element.scrollHeight
       });
 
-      const filename = asBW ? 'YBL_Rotation_Manager_BW.jpg' : 'YBL_Rotation_Manager.jpg';
-      const link = document.createElement('a');
-      link.download = filename;
-      link.href = canvas.toDataURL('image/jpeg', 0.9);
-      link.click();
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+
+      if (mode === 'save') {
+        const filename = asBW ? 'Coach_YBL_Rotation_BW.jpg' : 'Coach_YBL_Rotation.jpg';
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = dataUrl;
+        link.click();
+      } else if (printWindow) {
+        printWindow.document.write(
+          `<html><head><title>Print Rotation</title></head><body style="margin:0"><img src="${dataUrl}" style="width:100%" onload="window.print()" /></body></html>`
+        );
+        printWindow.document.close();
+      }
     } catch (error) {
       console.error('Export failed:', error);
       alert('Failed to export image. Please try again.');
+      printWindow?.close();
     } finally {
       if (asBW) {
         // Automatically revert back to color mode
@@ -1423,32 +1447,23 @@ export function RotationManagerScreen() {
 
         {/* Header */}
         <header className="bg-white border-b sticky top-0 z-20 shadow-sm">
-          <div className="max-w-7xl mx-auto px-2 sm:px-4 h-14 sm:h-16 flex flex-nowrap items-center justify-between gap-1 sm:gap-3">
+          <div className="max-w-7xl mx-auto px-2 sm:px-4 h-14 sm:h-16 flex flex-nowrap items-center gap-1.5 sm:gap-3">
             {/* Back to Dashboard */}
             <Link
               to="/dashboard"
               data-html2canvas-ignore
               className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-brand-600 transition-colors shrink-0"
-              title="Switch Team"
+              title="Back to Dashboard"
               aria-label="Back to Dashboard"
             >
               <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
             </Link>
 
-            {/* Clickable Logo & Title Area to Toggle Expanded Dashboard View */}
-            <div
-              onClick={() => setIsExpandedView(prev => !prev)}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  setIsExpandedView(prev => !prev);
-                }
-              }}
-              className="flex items-center gap-2 sm:gap-3 min-w-0 shrink cursor-pointer group select-none transition-opacity hover:opacity-90"
-              title={isExpandedView ? "Collapse Dashboard Menu & Advanced Stats" : "Expand Dashboard Menu & Advanced Stats"}
-              aria-expanded={isExpandedView}
+            {/* Team selector: logo + name + chevron, one compact unit, flexible width */}
+            <Link
+              to="/dashboard"
+              className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1 group select-none transition-opacity hover:opacity-90"
+              title="Switch team"
             >
               <div className={cn(
                 "p-1.5 sm:p-2 rounded-lg text-white transition-all shrink-0 group-hover:scale-105",
@@ -1456,42 +1471,34 @@ export function RotationManagerScreen() {
               )}>
                 <img src="/icon.svg" alt="" className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
-              <div className="min-w-0 flex flex-col justify-center">
-                <div className="flex items-center gap-1">
-                  <h1 className="font-bold text-sm sm:text-base text-slate-800 leading-none truncate group-hover:text-brand-600 transition-colors">
-                    {team.name}
-                  </h1>
-                  {isExpandedView ? (
-                    <ChevronUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-500 group-hover:text-brand-600 transition-colors shrink-0" />
-                  ) : (
-                    <ChevronDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 group-hover:text-brand-600 transition-colors shrink-0" />
-                  )}
-                </div>
-                <span className="text-[10px] sm:text-xs text-slate-500 hidden xs:inline sm:inline">Rotation Tool</span>
-              </div>
-            </div>
+              <h1 className="font-bold text-sm sm:text-base text-slate-800 truncate group-hover:text-brand-600 transition-colors min-w-0">
+                {team.name}
+              </h1>
+              <ChevronDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 group-hover:text-brand-600 transition-colors shrink-0" />
+            </Link>
 
-            <div className="flex flex-nowrap items-center gap-1 sm:gap-2 shrink-0" data-html2canvas-ignore>
-              {/* 1. Auto Assign Button (Dominant Primary Action) */}
+            {/* Primary + utility actions, then overflow */}
+            <div className="flex flex-nowrap items-center gap-1.5 sm:gap-2 shrink-0" data-html2canvas-ignore>
+              {/* Auto Assign - primary action */}
               <button
                 id="btn-auto-assign"
                 onClick={handleAutoAssign}
                 className={cn(
-                  "flex items-center gap-1.5 px-4 sm:px-6 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all shadow-sm active:scale-95 text-white shrink-0",
+                  "flex items-center gap-1.5 px-3.5 sm:px-4 h-10 text-sm font-semibold rounded-lg transition-all shadow-sm active:scale-95 text-white shrink-0",
                   isBlackAndWhite ? "bg-slate-800 hover:bg-slate-900" : "bg-brand-500 hover:bg-brand-600 shadow-brand-200"
                 )}
                 title="Fill remaining slots based on Period 1"
               >
                 <Wand2 className="w-4 h-4 shrink-0" />
-                <span className="hidden sm:inline whitespace-nowrap">Auto Assign</span>
+                <span className="whitespace-nowrap">Auto</span>
               </button>
 
-              {/* Strategy Settings Button (Gear Icon) */}
+              {/* Strategy Settings - quiet icon button */}
               <button
                 id="btn-assign-strategy"
                 onClick={() => setIsStrategyModalOpen(true)}
                 className={cn(
-                  "p-2 rounded-lg transition-all shadow-sm active:scale-95 border shrink-0",
+                  "w-10 h-10 flex items-center justify-center rounded-lg transition-all shadow-sm active:scale-95 border shrink-0",
                   isBlackAndWhite
                     ? "bg-white border-slate-300 text-slate-700 hover:bg-slate-100"
                     : "bg-white border-slate-200 text-slate-600 hover:text-brand-600 hover:border-brand-300 hover:bg-brand-50/50"
@@ -1502,189 +1509,110 @@ export function RotationManagerScreen() {
                 <Settings className="w-4 h-4 shrink-0" />
               </button>
 
-              {/* 2. Reset Button (Immediately to the right of Auto Assign) */}
+              {/* Reset - quiet icon button, confirms before clearing */}
               <button
                 id="btn-reset-grid"
                 onClick={handleReset}
-                className="flex items-center gap-1.5 p-2 sm:px-3 sm:py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-red-50 hover:text-red-700 hover:border-red-300 rounded-lg transition-all shadow-sm active:scale-95 shrink-0"
+                className={cn(
+                  "w-10 h-10 flex items-center justify-center rounded-lg transition-all shadow-sm active:scale-95 border shrink-0",
+                  isBlackAndWhite
+                    ? "bg-white border-slate-300 text-slate-700 hover:bg-slate-100"
+                    : "bg-white border-slate-200 text-slate-600 hover:text-red-700 hover:border-red-300 hover:bg-red-50"
+                )}
                 title="Reset Grid"
                 aria-label="Reset Grid"
               >
                 <RotateCcw className="w-4 h-4 shrink-0" />
-                <span className="hidden sm:inline whitespace-nowrap">Reset</span>
               </button>
 
-              {/* Help Button */}
-              <button
-                id="btn-help"
-                onClick={() => setIsHelpOpen(true)}
-                className={cn(
-                  "p-2 rounded-lg transition-colors shrink-0",
-                  isBlackAndWhite
-                    ? "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                    : "text-slate-500 hover:bg-slate-100 hover:text-brand-600"
+              {/* More - overflow menu */}
+              <div className="relative shrink-0">
+                <button
+                  id="btn-more-menu"
+                  onClick={() => setIsMoreMenuOpen(prev => !prev)}
+                  className={cn(
+                    "w-10 h-10 flex items-center justify-center rounded-lg transition-all shadow-sm active:scale-95 border shrink-0",
+                    isBlackAndWhite
+                      ? "bg-white border-slate-300 text-slate-700 hover:bg-slate-100"
+                      : "bg-white border-slate-200 text-slate-600 hover:text-brand-600 hover:border-brand-300 hover:bg-brand-50/50"
+                  )}
+                  title="More actions"
+                  aria-label="More actions"
+                  aria-expanded={isMoreMenuOpen}
+                >
+                  <MoreHorizontal className="w-4 h-4 shrink-0" />
+                </button>
+
+                {isMoreMenuOpen && (
+                  <>
+                    {/* Click-outside overlay */}
+                    <div
+                      className="fixed inset-0 z-30"
+                      onClick={() => setIsMoreMenuOpen(false)}
+                    />
+                    <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-lg border border-slate-200 z-40 py-1.5 overflow-hidden">
+                      <button
+                        onClick={() => { setIsHelpOpen(true); setIsMoreMenuOpen(false); }}
+                        className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors text-left"
+                      >
+                        <HelpCircle className="w-4 h-4 text-slate-400 shrink-0" />
+                        <span>Help &amp; How to Use</span>
+                      </button>
+
+                      <div className="my-1 border-t border-slate-100" />
+                      <div className="px-3.5 pt-1 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                        Save / Export
+                      </div>
+
+                      <button
+                        onClick={() => { setIsSaveExportModalOpen(true); setIsMoreMenuOpen(false); }}
+                        className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors text-left"
+                      >
+                        <ImageIcon className="w-4 h-4 text-slate-400 shrink-0" />
+                        <span>Save or print rotation image</span>
+                      </button>
+                      <button
+                        onClick={() => { handleSaveGame(); setIsMoreMenuOpen(false); }}
+                        disabled={isSaving}
+                        className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors text-left disabled:opacity-50"
+                      >
+                        <Save className="w-4 h-4 text-slate-400 shrink-0" />
+                        <span>{isSaving ? 'Saving...' : 'Add game to season'}</span>
+                      </button>
+                      <button
+                        onClick={() => { handleExportSeasonData(); setIsMoreMenuOpen(false); }}
+                        disabled={isExportingData}
+                        className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors text-left disabled:opacity-50"
+                      >
+                        <FileJson className="w-4 h-4 text-slate-400 shrink-0" />
+                        <span>{isExportingData ? 'Exporting...' : 'Export season JSON'}</span>
+                      </button>
+
+                      <div className="my-1 border-t border-slate-100" />
+
+                      <button
+                        onClick={() => { setIsExpandedView(prev => !prev); setIsMoreMenuOpen(false); }}
+                        className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors text-left"
+                      >
+                        <BarChart3 className="w-4 h-4 text-slate-400 shrink-0" />
+                        <span>{isExpandedView ? 'Hide' : 'Show'} season stats</span>
+                      </button>
+
+                      <div className="my-1 border-t border-slate-100" />
+
+                      <button
+                        onClick={() => { setIsMoreMenuOpen(false); signOutUser(); }}
+                        className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors text-left"
+                      >
+                        <LogOut className="w-4 h-4 text-red-500 shrink-0" />
+                        <span>Sign Out</span>
+                      </button>
+                    </div>
+                  </>
                 )}
-                title="How to Use"
-                aria-label="How to Use"
-              >
-                <HelpCircle className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
-              </button>
-
-              {/* 3. Save / Export Button (Consolidated Modal Trigger) */}
-              <button
-                id="btn-save-export"
-                onClick={() => setIsSaveExportModalOpen(true)}
-                disabled={isSaving || isExporting || isExportingData}
-                className={cn(
-                  "flex items-center gap-1.5 p-2 sm:px-3 sm:py-2 text-sm font-semibold rounded-lg transition-all shadow-sm active:scale-95 text-white shrink-0 disabled:opacity-50",
-                  isBlackAndWhite ? "bg-slate-900 hover:bg-slate-800" : "bg-emerald-600 hover:bg-emerald-700"
-                )}
-                title="Save & Export Options"
-                aria-label="Save & Export Options"
-              >
-                <Save className="w-4 h-4 shrink-0" />
-                <span className="hidden sm:inline whitespace-nowrap">Save / Export</span>
-              </button>
-
-              {/* Sign Out Button */}
-              <button
-                id="btn-sign-out"
-                onClick={() => signOutUser()}
-                className={cn(
-                  "p-2 rounded-lg transition-colors shrink-0",
-                  isBlackAndWhite
-                    ? "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                    : "text-slate-500 hover:bg-slate-100 hover:text-red-600"
-                )}
-                title="Sign Out"
-                aria-label="Sign Out"
-              >
-                <LogOut className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
-              </button>
-            </div>
-          </div>
-
-          {/* Labeled Menu Dropdown Panel (Expanded View) */}
-          {isExpandedView && (
-            <div
-              data-html2canvas-ignore
-              className={cn(
-                "border-t px-2 sm:px-4 py-3 sm:py-3.5 transition-colors",
-                isBlackAndWhite ? "bg-slate-100 border-slate-300" : "bg-slate-50/95 border-slate-200 backdrop-blur-sm"
-              )}
-            >
-              <div className="max-w-7xl mx-auto space-y-2">
-                <div className="flex items-center justify-between text-xs text-slate-500 font-medium px-0.5">
-                  <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-slate-600">
-                    Header Actions & Controls
-                  </span>
-                  <button
-                    onClick={() => setIsExpandedView(false)}
-                    className="text-[11px] sm:text-xs text-slate-400 hover:text-slate-700 flex items-center gap-1 transition-colors"
-                  >
-                    <span>Collapse menu</span>
-                    <ChevronUp className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                  {/* Auto Assign */}
-                  <button
-                    id="expanded-btn-auto-assign"
-                    onClick={handleAutoAssign}
-                    className={cn(
-                      "flex items-center p-3 rounded-xl border text-left transition-all active:scale-[0.98] gap-3",
-                      isBlackAndWhite
-                        ? "bg-white border-slate-300 hover:bg-slate-50 text-slate-900"
-                        : "bg-white border-slate-200 hover:border-brand-400 hover:bg-brand-50/40 text-slate-800"
-                    )}
-                    title="Fill remaining slots based on Period 1"
-                  >
-                    <div className={cn(
-                      "p-2 rounded-lg shrink-0 text-white shadow-sm",
-                      isBlackAndWhite ? "bg-slate-800" : "bg-brand-500"
-                    )}>
-                      <Wand2 className="w-4 h-4" />
-                    </div>
-                    <div className="min-w-0">
-                      <span className="font-bold text-xs sm:text-sm block truncate">Auto Assign</span>
-                      <span className="text-[11px] text-slate-500 block truncate">Fill slots from Period 1</span>
-                    </div>
-                  </button>
-
-                  {/* Strategy Settings */}
-                  <button
-                    id="expanded-btn-strategy"
-                    onClick={() => setIsStrategyModalOpen(true)}
-                    className={cn(
-                      "flex items-center p-3 rounded-xl border text-left transition-all active:scale-[0.98] gap-3",
-                      isBlackAndWhite
-                        ? "bg-white border-slate-300 hover:bg-slate-50 text-slate-900"
-                        : "bg-white border-slate-200 hover:border-brand-400 hover:bg-brand-50/40 text-slate-800"
-                    )}
-                    title="Configure Auto-Assign Strategy"
-                  >
-                    <div className={cn(
-                      "p-2 rounded-lg shrink-0 text-white shadow-sm",
-                      isBlackAndWhite ? "bg-slate-800" : "bg-brand-500"
-                    )}>
-                      <Settings className="w-4 h-4" />
-                    </div>
-                    <div className="min-w-0">
-                      <span className="font-bold text-xs sm:text-sm block truncate">Strategy</span>
-                      <span className="text-[11px] text-slate-500 block truncate">Rules & minutes</span>
-                    </div>
-                  </button>
-
-                  {/* Reset */}
-                  <button
-                    id="expanded-btn-reset"
-                    onClick={handleReset}
-                    className="flex items-center p-3 rounded-xl border border-slate-200 bg-white hover:border-red-300 hover:bg-red-50/40 text-slate-800 text-left transition-all active:scale-[0.98] gap-3"
-                    title="Clear current rotation slots"
-                  >
-                    <div className="p-2 rounded-lg bg-red-100 text-red-600 shrink-0 shadow-sm">
-                      <RotateCcw className="w-4 h-4" />
-                    </div>
-                    <div className="min-w-0">
-                      <span className="font-bold text-xs sm:text-sm block truncate">Reset Grid</span>
-                      <span className="text-[11px] text-slate-500 block truncate">Clear all active slots</span>
-                    </div>
-                  </button>
-
-                  {/* Save / Export Modal Trigger */}
-                  <button
-                    id="expanded-btn-save-export"
-                    onClick={() => setIsSaveExportModalOpen(true)}
-                    disabled={isSaving || isExporting || isExportingData}
-                    className={cn(
-                      "flex items-center p-3 rounded-xl border text-left transition-all active:scale-[0.98] gap-3 disabled:opacity-50",
-                      isBlackAndWhite
-                        ? "bg-slate-800 text-white border-slate-900 hover:bg-slate-700"
-                        : "bg-white border-emerald-200 hover:border-emerald-400 hover:bg-emerald-50/40 text-slate-800"
-                    )}
-                    title="Open Save & Export modal"
-                  >
-                    <div className={cn(
-                      "p-2 rounded-lg shrink-0 text-white shadow-sm",
-                      isBlackAndWhite ? "bg-slate-700" : "bg-emerald-600"
-                    )}>
-                      <Save className="w-4 h-4" />
-                    </div>
-                    <div className="min-w-0">
-                      <span className="font-bold text-xs sm:text-sm block truncate">Save / Export</span>
-                      <span className={cn(
-                        "text-[11px] block truncate",
-                        isBlackAndWhite ? "text-slate-300" : "text-slate-500"
-                      )}>
-                        Database, images & data options
-                      </span>
-                    </div>
-                  </button>
-                </div>
               </div>
             </div>
-          )}
+          </div>
         </header>
 
         <main className="max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6 w-full overflow-x-hidden">
@@ -1959,14 +1887,8 @@ export function RotationManagerScreen() {
         <SaveExportModal
           isOpen={isSaveExportModalOpen}
           onClose={() => setIsSaveExportModalOpen(false)}
-          onSaveGame={handleSaveGame}
-          onDownloadColor={() => handleExport(false)}
-          onDownloadBW={() => handleExport(true)}
-          onExportSeasonData={handleExportSeasonData}
-          isSaving={isSaving}
+          onComplete={(asBW, mode) => handleExportImage(asBW, mode)}
           isExporting={isExporting}
-          isExportingData={isExportingData}
-          isBlackAndWhite={isBlackAndWhite}
         />
 
         <AssignStrategyModal
