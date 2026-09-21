@@ -78,7 +78,7 @@ export function DashboardScreen() {
             <div className="p-2 rounded-lg bg-brand-500 text-white shadow-brand-200 shadow-md">
               <Users className="w-5 h-5" />
             </div>
-            <h1 className="font-bold text-slate-800">YBL Coach App</h1>
+            <h1 className="font-bold text-slate-800 hidden sm:block">Coach YBL App</h1>
           </div>
           <div className="flex items-center gap-3">
             {user?.photoURL && !avatarError ? (

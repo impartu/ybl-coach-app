@@ -33,7 +33,7 @@ export function LoginScreen() {
     <div className="min-h-screen w-full flex items-center justify-center bg-slate-50 px-4">
       <div className="w-full max-w-sm rounded-xl border border-slate-200 bg-white p-8 shadow-2xl">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-slate-800">YBL Coach App</h1>
+          <h1 className="text-2xl font-bold text-slate-800">Coach YBL App</h1>
           <p className="mt-2 text-sm text-slate-500">
             Sign in to manage your team's rosters, rotations, and game logs.
           </p>

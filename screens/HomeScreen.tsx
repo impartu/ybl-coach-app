@@ -39,7 +39,7 @@ export function HomeScreen() {
             <div className="p-1.5 rounded-lg bg-brand-500 text-white shadow-brand-200 shadow-md">
               <CalendarClock className="w-5 h-5" />
             </div>
-            <span className="font-bold text-slate-800">YBL Coach App</span>
+            <span className="font-bold text-slate-800 hidden sm:inline">Coach YBL App</span>
           </div>
           <Link
             to="/login"
@@ -58,7 +58,7 @@ export function HomeScreen() {
             <span className="text-brand-500">every game.</span>
           </h1>
           <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">
-            YBL Coach App builds fair, rule-compliant rotations in seconds, tracks every
+            Coach YBL App builds fair, rule-compliant rotations in seconds, tracks every
             player's minutes across the season, and keeps your whole roster organized in
             one place.
           </p>
@@ -164,7 +164,7 @@ export function HomeScreen() {
 
       {/* Footer */}
       <footer className="max-w-6xl mx-auto px-4 sm:px-6 py-8 text-center text-sm text-slate-500">
-        © {new Date().getFullYear()} YBL Coach App
+        © {new Date().getFullYear()} Coach YBL App
       </footer>
     </div>
   );
