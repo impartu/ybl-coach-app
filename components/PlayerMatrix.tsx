@@ -116,12 +116,12 @@ export const PlayerMatrix: React.FC<PlayerMatrixProps> = ({
                 )}
               >
                 {/* Player Name Cell - Tap to Toggle Availability */}
-                <td 
+                <td
                   onClick={() => onToggleStatus(player.id)}
                   className={cn(
                     "px-1.5 sm:px-3 py-1 sm:py-2 cursor-pointer group select-none relative border-l-2 sm:border-l-4 transition-all w-28 sm:w-32 md:w-auto max-w-[115px] sm:max-w-none",
                     // 1. Status Slivers (Left Border)
-                    player.isAvailable 
+                    player.isAvailable
                       ? (isBlackAndWhite ? "border-slate-900" : "border-brand-500") // Checked In
                       : (isBlackAndWhite ? "border-slate-300" : "border-red-500"),   // Checked Out
                   )}

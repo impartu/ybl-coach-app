@@ -31,6 +31,21 @@ import { AssignStrategyModal } from '../components/AssignStrategyModal';
 import { AdminGameLog } from '../components/AdminGameLog';
 import { cn } from '../utils/cn';
 
+// html2canvas estimates its own text line-height rather than using the browser's,
+// and reliably underestimates it for the "Inter" web font, clipping the tops of
+// glyphs. A CSS class with `line-height !important` on a wildcard descendant
+// selector was tried first and only partially worked (fixed some text, not all) --
+// confirmed via an isolated repro that setting the inline style directly, on every
+// element, via JS is what reliably works. Applied right before capture, removed
+// right after.
+function withSafeLineHeightForCapture<T>(root: HTMLElement, run: () => Promise<T>): Promise<T> {
+  const elements = [root, ...Array.from(root.querySelectorAll<HTMLElement>('*'))];
+  elements.forEach((el) => el.style.setProperty('line-height', '1.7', 'important'));
+  return run().finally(() => {
+    elements.forEach((el) => el.style.removeProperty('line-height'));
+  });
+}
+
 export function RotationManagerScreen() {
   const { teamId } = useParams<{ teamId: string }>();
   const { user, signOutUser } = useAuth();
@@ -1212,26 +1227,20 @@ export function RotationManagerScreen() {
         await new Promise(resolve => setTimeout(resolve, 100));
       }
 
-      // html2canvas estimates its own text line-height rather than using the
-      // browser's, and reliably underestimates it for the "Inter" web font,
-      // clipping the tops of glyphs across the whole capture. Forcing extra
-      // line-height room on the real DOM before capturing (so the browser
-      // itself lays out taller, already-correct boxes) gives html2canvas's
-      // undershoot somewhere safe to land instead of clipping.
-      element.classList.add('export-capture-safe-lineheight');
       if (document.fonts && document.fonts.ready) {
         await document.fonts.ready;
       }
-      await new Promise(resolve => setTimeout(resolve, 100));
 
-      const canvas = await html2canvas(element as HTMLElement, {
-        scale: 2, // Higher quality
-        useCORS: true,
-        backgroundColor: asBW ? '#ffffff' : '#f8fafc', // Matches background
-        logging: false,
-        windowWidth: element.scrollWidth,
-        windowHeight: element.scrollHeight
-      });
+      const canvas = await withSafeLineHeightForCapture(element, () =>
+        html2canvas(element as HTMLElement, {
+          scale: 2, // Higher quality
+          useCORS: true,
+          backgroundColor: asBW ? '#ffffff' : '#f8fafc', // Matches background
+          logging: false,
+          windowWidth: element.scrollWidth,
+          windowHeight: element.scrollHeight
+        })
+      );
 
       const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
 
@@ -1252,7 +1261,6 @@ export function RotationManagerScreen() {
       alert('Failed to export image. Please try again.');
       printWindow?.close();
     } finally {
-      element?.classList.remove('export-capture-safe-lineheight');
       if (asBW) {
         // Automatically revert back to color mode
         setIsBlackAndWhite(false);
