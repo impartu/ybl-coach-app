@@ -545,7 +545,15 @@ export function RotationManagerScreen() {
     }
 
     // Monte Carlo Configuration
-    const MAX_ATTEMPTS = 2000;
+    // 2000 was too low: a locked Period 1 forces every player left out of it to land in
+    // Period 2 to satisfy the "1 period in P1 or P2" rule, and a uniformly random P2 draw
+    // only hits that exact requirement ~4-8% of the time for a typical 9-player roster.
+    // Verified empirically (audited the algorithm standalone, 1000+ trials per scenario):
+    // 2000 attempts had a 4-12.5% chance of exhausting the budget without ever finding a
+    // fully valid schedule; 10000 had zero failures across the same trials, and even a
+    // genuinely infeasible lock (more players excluded from P1 than P2 has slots) exhausts
+    // 10000 attempts in ~250ms, well under anything a coach would notice.
+    const MAX_ATTEMPTS = 10000;
     let bestRotation: RotationState | null = null;
     let fewestViolations = Infinity;
 
