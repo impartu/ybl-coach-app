@@ -682,6 +682,69 @@ export function RotationManagerScreen() {
     // If we failed completely (should rely on fallback)
     if (!bestRotation) return;
 
+    // Helper to check if a player is in a given period in bestRotation
+    const isPlayerInRotPeriod = (grid: RotationState, pid: string, pIdx: number): boolean => {
+      for (let s = 0; s < SLOTS_PER_PERIOD; s++) {
+        if (grid[`${pIdx}-${s}`] === pid) return true;
+      }
+      return false;
+    };
+
+    // Helper to get players in a given period in bestRotation with their slot index
+    const getPeriodSlots = (grid: RotationState, pIdx: number) => {
+      const slots: { slot: number; player: Player }[] = [];
+      for (let s = 0; s < SLOTS_PER_PERIOD; s++) {
+        const pid = grid[`${pIdx}-${s}`];
+        const pl = availablePlayers.find(p => p.id === pid);
+        if (pl) slots.push({ slot: s, player: pl });
+      }
+      return slots;
+    };
+
+    // --- Repair Pass: guarantee every player has >=1 period in P1-P2 and >=1 in P3-P4 ---
+    // The Monte Carlo search above is probabilistic, not guaranteed: a locked Period 1
+    // (or just bad luck) can leave it unable to find a fully valid P1-P4 schedule even
+    // after MAX_ATTEMPTS tries. Deterministically fix any remaining violation here, via
+    // the same swap technique already used below for roles/stagger/defense, rather than
+    // silently shipping a schedule that breaks the league's core half-rule.
+    if (availablePlayers.length >= 7) {
+      const repairHalf = (periodsInHalf: [number, number]) => {
+        for (const player of availablePlayers) {
+          const inHalf = periodsInHalf.some(p => isPlayerInRotPeriod(bestRotation!, player.id, p));
+          if (inHalf) continue;
+
+          for (const targetPeriod of periodsInHalf) {
+            const otherPeriodInHalf = periodsInHalf.find(p => p !== targetPeriod)!;
+            const slots = getPeriodSlots(bestRotation!, targetPeriod);
+            let repaired = false;
+
+            for (const slot of slots) {
+              // Never displace a coach-locked Period 1 slot
+              if (targetPeriod === 0 && p1Locks[slot.slot]) continue;
+              // The displaced player must still have the OTHER period in this half, so
+              // removing them here doesn't just trade their violation for a new one
+              if (!isPlayerInRotPeriod(bestRotation!, slot.player.id, otherPeriodInHalf)) continue;
+              // Don't let the player being placed end up playing all 4 of P1-P4
+              // (breaks the separate "sit out at least 1 of P1-P4" rule)
+              const wouldPlayAllFour = [0, 1, 2, 3].every(
+                p => p === targetPeriod || isPlayerInRotPeriod(bestRotation!, player.id, p)
+              );
+              if (wouldPlayAllFour) continue;
+
+              bestRotation![`${targetPeriod}-${slot.slot}`] = player.id;
+              repaired = true;
+              break;
+            }
+
+            if (repaired) break;
+          }
+        }
+      };
+
+      repairHalf([0, 1]); // First half: Period 1 or 2
+      repairHalf([2, 3]); // Second half: Period 3 or 4
+    }
+
     // Constraint D: Period 5 (Coach's Choice / Fairness with Extra Minutes Strategy)
     // Calculate play counts from P1-P4 in the best rotation
     const counts: Record<string, number> = {};
@@ -752,25 +815,6 @@ export function RotationManagerScreen() {
     });
 
     // --- Post-Draft Swaps ---
-
-    // Helper to check if a player is in a given period in bestRotation
-    const isPlayerInRotPeriod = (grid: RotationState, pid: string, pIdx: number): boolean => {
-      for (let s = 0; s < SLOTS_PER_PERIOD; s++) {
-        if (grid[`${pIdx}-${s}`] === pid) return true;
-      }
-      return false;
-    };
-
-    // Helper to get players in a given period in bestRotation with their slot index
-    const getPeriodSlots = (grid: RotationState, pIdx: number) => {
-      const slots: { slot: number; player: Player }[] = [];
-      for (let s = 0; s < SLOTS_PER_PERIOD; s++) {
-        const pid = grid[`${pIdx}-${s}`];
-        const pl = availablePlayers.find(p => p.id === pid);
-        if (pl) slots.push({ slot: s, player: pl });
-      }
-      return slots;
-    };
 
     // Helper to ensure swaps do not break the 1-per-half league rule logic
     // Constraint A: Every player plays at least 1 in P1 or P2.
