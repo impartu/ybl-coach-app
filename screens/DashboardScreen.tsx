@@ -7,16 +7,6 @@ import { Team } from '../types';
 
 const RESOURCE_LINKS = [
   {
-    icon: CalendarDays,
-    label: 'OGP Youth Basketball League Schedules',
-    href: 'https://basketball.exposureevents.com/organizations/28879/ogp-youth-basketball-league',
-  },
-  {
-    icon: ClipboardList,
-    label: 'Youth Basketball League Sign-ups',
-    href: 'https://opengympremier.com/youth-basketball-league/',
-  },
-  {
     icon: BookOpen,
     label: 'Jr. NBA Practice Plans',
     href: 'https://jr.nba.com/jr-nba-instructional-curriculum/',
@@ -25,6 +15,16 @@ const RESOURCE_LINKS = [
     icon: Dumbbell,
     label: 'Skills and Drills',
     href: 'https://jr.nba.com/category/basketball-skills-and-drills/',
+  },
+  {
+    icon: ClipboardList,
+    label: 'YBL Sign-ups',
+    href: 'https://opengympremier.com/youth-basketball-league/',
+  },
+  {
+    icon: CalendarDays,
+    label: 'OGP YBL Schedules',
+    href: 'https://basketball.exposureevents.com/organizations/28879/ogp-youth-basketball-league',
   },
 ];
 
