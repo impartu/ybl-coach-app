@@ -12,6 +12,23 @@ interface AuthContextValue {
 
 export const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+// Push notification on new sign-up, via ntfy.sh (no account/backend needed -- any POST
+// to this topic URL buzzes whoever has subscribed to it in the ntfy app). The topic name
+// is a random, unguessable string since ntfy topics are public to anyone who knows them
+// and this message includes the new user's email. Best-effort only: never let a failed
+// notification affect the actual sign-in flow.
+const SIGNUP_NOTIFY_TOPIC = 'coachybl-signups-ccdfaf9cb656';
+
+function notifyNewSignup(user: User): void {
+  fetch(`https://ntfy.sh/${SIGNUP_NOTIFY_TOPIC}`, {
+    method: 'POST',
+    body: `${user.displayName || 'Someone'} just signed up: ${user.email}`,
+    headers: { Title: 'New Coach YBL App sign-up' },
+  }).catch((error) => {
+    console.error('Error sending new sign-up notification:', error);
+  });
+}
+
 // Creates /users/{uid} on first sign-in; leaves it untouched on subsequent sign-ins.
 async function ensureUserProfile(user: User): Promise<void> {
   const userRef = doc(db, 'users', user.uid);
@@ -23,6 +40,7 @@ async function ensureUserProfile(user: User): Promise<void> {
       photoURL: user.photoURL,
       createdAt: serverTimestamp(),
     });
+    notifyNewSignup(user);
   }
 }
 
