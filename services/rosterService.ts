@@ -1,9 +1,31 @@
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
-import { Player, AssignSettings, RosterDoc } from '../types';
+import { Player, AssignSettings, RosterDoc, RotationState } from '../types';
 
 function rosterDocRef(teamId: string) {
   return doc(db, 'teams', teamId, 'roster', 'current');
+}
+
+// Separate from roster/current: this is the coach's in-progress rotation grid
+// (what's on screen right now), auto-saved continuously, as opposed to the
+// roster configuration itself, which is only ever written by explicit user
+// action (Save Roster / Save Strategy).
+function rotationDraftDocRef(teamId: string) {
+  return doc(db, 'teams', teamId, 'rotationDraft', 'current');
+}
+
+export async function getRotationDraft(teamId: string): Promise<RotationState | null> {
+  const snap = await getDoc(rotationDraftDocRef(teamId));
+  if (!snap.exists()) return null;
+  const data = snap.data();
+  return (data?.rotation as RotationState) ?? null;
+}
+
+export async function saveRotationDraft(teamId: string, rotation: RotationState): Promise<void> {
+  await setDoc(rotationDraftDocRef(teamId), {
+    rotation,
+    updatedAt: serverTimestamp(),
+  });
 }
 
 // Starting point for a brand-new team: generic slots, no real player data.

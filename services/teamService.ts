@@ -14,7 +14,7 @@ import {
 import { db } from '../firebase';
 import { Team } from '../types';
 
-const TEAM_SUBCOLLECTIONS = ['games', 'favorites', 'roster', 'settings'] as const;
+const TEAM_SUBCOLLECTIONS = ['games', 'favorites', 'roster', 'settings', 'rotationDraft'] as const;
 
 export async function createTeam(uid: string, name: string): Promise<string> {
   const docRef = await addDoc(collection(db, 'teams'), {

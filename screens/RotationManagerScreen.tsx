@@ -16,7 +16,7 @@ import { RotateCcw, AlertCircle, Wand2, HelpCircle, Save, Bookmark, BookmarkPlus
 import html2canvas from 'html2canvas';
 import { useAuth } from '../hooks/useAuth';
 import { getTeam } from '../services/teamService';
-import { getRoster, saveRoster, saveAssignSettings, getDefaultRoster } from '../services/rosterService';
+import { getRoster, saveRoster, saveAssignSettings, getDefaultRoster, getRotationDraft, saveRotationDraft } from '../services/rosterService';
 import { getGames, saveGame, updateGame, deleteGame } from '../services/gameService';
 import { getFavorites, saveFavorite, deleteFavorite } from '../services/favoriteService';
 import { PERIOD_NAMES } from '../constants';
@@ -61,6 +61,9 @@ export function RotationManagerScreen() {
   const [roster, setRoster] = useState<Player[]>(() => getDefaultRoster());
   const players = roster;
   const [rotation, setRotation] = useState<RotationState>({});
+  // Guards the auto-save effect below from firing (and overwriting a real saved
+  // draft with the initial empty grid) before that team's draft has been loaded.
+  const [isRotationDraftLoaded, setIsRotationDraftLoaded] = useState(false);
   const [activeDragPlayerId, setActiveDragPlayerId] = useState<string | null>(null);
   const [dragError, setDragError] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
@@ -346,6 +349,41 @@ export function RotationManagerScreen() {
     fetchFavorites();
     fetchRoster();
   }, [teamId]);
+
+  // Load whatever rotation grid was last auto-saved for this team, so a refresh
+  // or an accidental navigation away doesn't lose in-progress work.
+  useEffect(() => {
+    if (!teamId) return;
+    let isActive = true;
+    setIsRotationDraftLoaded(false);
+    (async () => {
+      try {
+        const draft = await getRotationDraft(teamId);
+        if (!isActive) return;
+        if (draft) setRotation(draft);
+      } catch (error) {
+        console.error('Error loading saved rotation draft:', error);
+      } finally {
+        if (isActive) setIsRotationDraftLoaded(true);
+      }
+    })();
+    return () => {
+      isActive = false;
+    };
+  }, [teamId]);
+
+  // Debounced auto-save of the working grid on every change. Gated on the draft
+  // finishing its initial load above, so this can never fire with the blank
+  // starting grid and clobber a real saved draft before it's had a chance to load.
+  useEffect(() => {
+    if (!teamId || !isRotationDraftLoaded) return;
+    const timeoutId = setTimeout(() => {
+      saveRotationDraft(teamId, rotation).catch((error) => {
+        console.error('Error auto-saving rotation draft:', error);
+      });
+    }, 1000);
+    return () => clearTimeout(timeoutId);
+  }, [teamId, isRotationDraftLoaded, rotation]);
 
   const handleUpdatePlayer = (index: number, updatedFields: Partial<Player>) => {
     setRoster(prev => {
