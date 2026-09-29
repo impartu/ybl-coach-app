@@ -1,9 +1,32 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Trash2, LogOut } from 'lucide-react';
+import { Plus, Trash2, LogOut, CalendarDays, ClipboardList, BookOpen, Dumbbell, Mail, ExternalLink } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { createTeam, listMyTeams, deleteTeam } from '../services/teamService';
 import { Team } from '../types';
+
+const RESOURCE_LINKS = [
+  {
+    icon: CalendarDays,
+    label: 'OGP Youth Basketball League Schedules',
+    href: 'https://basketball.exposureevents.com/organizations/28879/ogp-youth-basketball-league',
+  },
+  {
+    icon: ClipboardList,
+    label: 'Youth Basketball League Sign-ups',
+    href: 'https://opengympremier.com/youth-basketball-league/',
+  },
+  {
+    icon: BookOpen,
+    label: 'Jr. NBA Practice Plans',
+    href: 'https://jr.nba.com/jr-nba-instructional-curriculum/',
+  },
+  {
+    icon: Dumbbell,
+    label: 'Skills and Drills',
+    href: 'https://jr.nba.com/category/basketball-skills-and-drills/',
+  },
+];
 
 export function DashboardScreen() {
   const { user, signOutUser } = useAuth();
@@ -174,6 +197,42 @@ export function DashboardScreen() {
             ))}
           </ul>
         )}
+
+        <div>
+          <h2 className="text-lg font-bold text-slate-800">Resources</h2>
+          <p className="text-sm text-slate-500 mt-1">Quick links for the season.</p>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 divide-y divide-gray-100 overflow-hidden">
+          {RESOURCE_LINKS.map(({ icon: Icon, label, href }) => (
+            <a
+              key={href}
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 p-4 hover:bg-slate-50 transition-colors group"
+            >
+              <div className="w-9 h-9 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
+                <Icon className="w-4 h-4" />
+              </div>
+              <span className="flex-1 text-sm font-medium text-slate-700 group-hover:text-slate-900">
+                {label}
+              </span>
+              <ExternalLink className="w-3.5 h-3.5 text-slate-300 group-hover:text-slate-500 shrink-0" />
+            </a>
+          ))}
+          <a
+            href="mailto:admin@coachybl.com"
+            className="flex items-center gap-3 p-4 hover:bg-slate-50 transition-colors group"
+          >
+            <div className="w-9 h-9 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center shrink-0">
+              <Mail className="w-4 h-4" />
+            </div>
+            <span className="flex-1 text-sm font-medium text-slate-700 group-hover:text-slate-900">
+              Support: admin@coachybl.com
+            </span>
+          </a>
+        </div>
       </main>
     </div>
   );
