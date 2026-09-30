@@ -96,8 +96,42 @@ export function HomeScreen() {
         </div>
       </section>
 
-      {/* Benefits */}
+      {/* Screenshots */}
       <section id="features" className="bg-white border-y">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 text-center">
+            See it in action
+          </h2>
+          <p className="mt-2 text-slate-600 text-center max-w-xl mx-auto">
+            The rotation grid and player matrix, built for the sideline.
+          </p>
+          <div className="mt-10 grid sm:grid-cols-2 gap-6">
+            <div className="rounded-xl overflow-hidden border border-slate-200 shadow-sm bg-slate-100 aspect-[4/3]">
+              <img
+                src="/marketing/screenshot-matrix.png"
+                alt="Player matrix screenshot showing quick-assign checkboxes per period"
+                className="w-full h-full object-cover object-top"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).style.display = 'none';
+                }}
+              />
+            </div>
+            <div className="rounded-xl overflow-hidden border border-slate-200 shadow-sm bg-slate-100 aspect-[4/3]">
+              <img
+                src="/marketing/screenshot-grid.png"
+                alt="Rotation grid screenshot showing five periods of assigned players"
+                className="w-full h-full object-cover object-top"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).style.display = 'none';
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Benefits */}
+      <section className="bg-white border-b">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
           <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 text-center">
             What matters most to coaches
@@ -130,40 +164,6 @@ export function HomeScreen() {
                 </div>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Screenshots */}
-      <section className="bg-white border-y">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
-          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 text-center">
-            See it in action
-          </h2>
-          <p className="mt-2 text-slate-600 text-center max-w-xl mx-auto">
-            The rotation grid and player matrix, built for the sideline.
-          </p>
-          <div className="mt-10 grid sm:grid-cols-2 gap-6">
-            <div className="rounded-xl overflow-hidden border border-slate-200 shadow-sm bg-slate-100 aspect-[4/3]">
-              <img
-                src="/marketing/screenshot-matrix.png"
-                alt="Player matrix screenshot showing quick-assign checkboxes per period"
-                className="w-full h-full object-cover object-top"
-                onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).style.display = 'none';
-                }}
-              />
-            </div>
-            <div className="rounded-xl overflow-hidden border border-slate-200 shadow-sm bg-slate-100 aspect-[4/3]">
-              <img
-                src="/marketing/screenshot-grid.png"
-                alt="Rotation grid screenshot showing five periods of assigned players"
-                className="w-full h-full object-cover object-top"
-                onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).style.display = 'none';
-                }}
-              />
-            </div>
           </div>
         </div>
       </section>
