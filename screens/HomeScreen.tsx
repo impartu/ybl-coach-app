@@ -1,25 +1,31 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Wand2, Users, TrendingUp, Bookmark, ArrowRight } from 'lucide-react';
+import { Users, Bookmark, ArrowRight } from 'lucide-react';
+import { cn } from '../utils/cn';
+
+const BENEFITS = [
+  {
+    image: '/marketing/screenshot-strategy.png',
+    alt: 'Auto-Assign Strategy settings: require a handler and rim per period, balance defensive ratings, stagger depth players, and choose a Development or Competitive extra-minutes policy',
+    title: 'Auto-rotations built around your strategy — always within YBL rules',
+    description:
+      "Require a ball-handler and rebounder every period, balance defensive ratings, stagger your bench — or just toggle Development vs. Competitive and let it handle the rest. However you coach, the rotation still meets every YBL rule.",
+  },
+  {
+    image: '/marketing/screenshot-season-stats.png',
+    alt: 'Season stats table showing each player\'s total minutes, season total, games played, and average minutes per game',
+    title: 'Never get caught off guard by a playing-time question',
+    description:
+      "Every player's minutes are tracked automatically, game after game, all season. When a parent asks why their kid isn't playing more, you've already got the real numbers — not a guess.",
+  },
+];
 
 const FEATURES = [
-  {
-    icon: Wand2,
-    title: 'Balanced or Winning Rotations',
-    description:
-      "Auto-assign rotations with a strategy toggle: balanced minutes for development, or optimized to win. Every grid meets YBL's league rules automatically.",
-  },
   {
     icon: Users,
     title: 'Roster Management by Role',
     description:
       "Configure your roster with each player's roles, defense rating, and availability, so lineups reflect how your team actually plays.",
-  },
-  {
-    icon: TrendingUp,
-    title: 'Season-Long Minute Tracking',
-    description:
-      'Minutes played are tracked automatically across every saved game, so you always know who is due for more time next game.',
   },
   {
     icon: Bookmark,
@@ -90,6 +96,44 @@ export function HomeScreen() {
         </div>
       </section>
 
+      {/* Benefits */}
+      <section id="features" className="bg-white border-y">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 text-center">
+            What matters most to coaches
+          </h2>
+          <p className="mt-2 text-slate-600 text-center max-w-xl mx-auto">
+            Built around what coaches actually told us they needed.
+          </p>
+
+          <div className="mt-12 space-y-14 sm:space-y-20">
+            {BENEFITS.map((benefit, idx) => (
+              <div key={benefit.title} className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+                <div className={idx % 2 === 1 ? 'md:order-2' : ''}>
+                  <h3 className="text-xl sm:text-2xl font-bold text-slate-900 leading-snug">
+                    {benefit.title}
+                  </h3>
+                  <p className="mt-3 text-slate-600 leading-relaxed">{benefit.description}</p>
+                </div>
+                <div className={cn(
+                  'rounded-xl overflow-hidden border border-slate-200 shadow-sm bg-slate-50 p-3',
+                  idx % 2 === 1 ? 'md:order-1' : ''
+                )}>
+                  <img
+                    src={benefit.image}
+                    alt={benefit.alt}
+                    className="w-full h-auto rounded-lg"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Screenshots */}
       <section className="bg-white border-y">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
@@ -125,7 +169,7 @@ export function HomeScreen() {
       </section>
 
       {/* Features */}
-      <section id="features" className="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
         <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 text-center">
           Everything a coach needs, nothing they don't
         </h2>
